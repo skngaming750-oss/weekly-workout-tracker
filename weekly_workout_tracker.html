@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Workout Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-brand-500/10 border border-brand-500/20 rounded-xl text-brand-500">
+                    <i class="fa-solid fa-dumbbell text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        Weekly Workout Companion
+                    </h1>
+                    <p class="text-xs text-slate-400">Structured Calisthenics & Cardio Program</p>
+                </div>
+            </div>
+
+            <!-- Top Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="openTimerModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-200 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-stopwatch text-brand-500"></i>
+                    <span>Quick Timer</span>
+                </button>
+                <button onclick="resetWeeklyProgress()" class="px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-lg text-xs font-medium text-rose-400 flex items-center gap-2 transition">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Reset Week</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Sidebar Navigation (Days of Week) -->
+        <aside class="lg:col-span-3 flex flex-col gap-3">
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 px-1">Weekly Schedule</h2>
+                <nav id="day-tabs" class="space-y-1.5"></nav>
+            </div>
+
+            <!-- Overall Weekly Progress Box -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-slate-400">Week Completion</span>
+                    <span id="weekly-percentage" class="text-xs font-bold text-brand-500">0%</span>
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="weekly-progress-bar" class="bg-brand-500 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <div class="mt-3 text-[11px] text-slate-400 flex justify-between">
+                    <span>Sets Completed:</span>
+                    <span id="completed-sets-count" class="font-semibold text-slate-200">0 / 0</span>
+                </div>
+            </div>
+
+            <!-- Quick Tip Card -->
+            <div class="bg-brand-900/20 border border-brand-500/20 rounded-2xl p-4">
+                <div class="flex items-start gap-2.5">
+                    <i class="fa-solid fa-lightbulb text-brand-500 mt-0.5"></i>
+                    <div>
+                        <h4 class="text-xs font-semibold text-brand-500 mb-1">RIR (Reps in Reserve)</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            On Friday, leave 2–3 reps "in the tank" on each set. Stop when you feel you could only complete 2 or 3 more repetitions with clean form.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <section class="lg:col-span-9 space-y-6">
+
+            <!-- Day Header Banner -->
+            <div id="day-header" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="day-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-brand-500/10 text-brand-500 border border-brand-500/20">
+                            Day View
+                        </span>
+                        <span id="day-focus-tag" class="text-xs text-slate-400">Focus Tag</span>
+                    </div>
+                    <h2 id="day-title" class="text-2xl font-bold text-white tracking-tight"></h2>
+                    <p id="day-description" class="text-sm text-slate-400 mt-1"></p>
+                </div>
+                
+                <div class="flex items-center gap-3 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800">
+                    <button id="mark-day-complete-btn" onclick="toggleCurrentDayCompletion()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-brand-600/20 transition flex items-center gap-2">
+                        <i class="fa-solid fa-check"></i>
+                        <span>Mark Day Done</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Exercises Container -->
+            <div id="exercises-list" class="space-y-4">
+                <!-- Dynamically populated exercise cards -->
+            </div>
+
+            <!-- Rest Day State (Hidden by default) -->
+            <div id="rest-day-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center space-y-4">
+                <div class="w-16 h-16 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center mx-auto text-indigo-400 text-2xl">
+                    <i class="fa-solid fa-bed"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white">Active Recovery & Rest</h3>
+                <p class="text-slate-400 text-sm max-w-md mx-auto">
+                    Rest is when your muscles repair, grow, and adapt. Take today to hydrate, eat nutrient-dense foods, and get plenty of sleep!
+                </p>
+                <div class="pt-2">
+                    <span class="inline-flex items-center gap-2 text-xs font-medium text-slate-300 bg-slate-800 px-4 py-2 rounded-xl">
+                        <i class="fa-solid fa-heart-pulse text-rose-400"></i> Recommended: Gentle walking, light mobility, hydrate well.
+                    </span>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- Floating / Modal Timer -->
+    <div id="timer-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 space-y-5 shadow-2xl relative">
+            <button onclick="closeTimerModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center">
+                <h3 class="text-lg font-bold text-white flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-brand-500"></i> Rest & Plank Timer
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Set interval or countdown for your sets</p>
+            </div>
+
+            <div class="text-center py-4 bg-slate-950 border border-slate-800 rounded-xl">
+                <div id="timer-display" class="text-5xl font-mono font-bold text-white tracking-wider">00:30</div>
+                <span id="timer-status" class="text-xs font-medium text-slate-400 mt-1 block">Ready</span>
+            </div>
+
+            <!-- Quick Duration Buttons -->
+            <div class="grid grid-cols-4 gap-2">
+                <button onclick="setTimerDuration(20)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">20s</button>
+                <button onclick="setTimerDuration(30)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">30s</button>
+                <button onclick="setTimerDuration(60)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">60s</button>
+                <button onclick="setTimerDuration(90)" class="py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition">90s</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex items-center gap-3">
+                <button id="timer-start-btn" onclick="toggleTimer()" class="flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition">
+                    Start Timer
+                </button>
+                <button onclick="resetTimer()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-semibold rounded-xl transition">
+                    Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // Workout Data Schema
+        const workoutData = [
+            {
+                id: 'mon',
+                day: 'Monday',
+                shortDay: 'MON',
+                icon: '💪',
+                type: 'Full Body',
+                badge: 'Full Body Focus',
+                description: 'Build total body functional strength with foundational bodyweight movements.',
+                exercises: [
+                    { name: 'Bodyweight Squats', sets: 2, reps: '10 reps', cues: 'Keep chest upright, push knees outwards over toes, sink hips below parallel.' },
+                    { name: 'Incline / Knee Push-Ups', sets: 2, reps: '8–12 reps', cues: 'Keep your core braced and body in a straight line. Lower chest to bar/floor.' },
+                    { name: 'Glute Bridges', sets: 2, reps: '12 reps', cues: 'Drive through your heels, squeeze glutes hard at top for 1 full second.' },
+                    { name: 'Backpack Rows (Light)', sets: 2, reps: '10 reps', cues: 'Hinge at hips with flat back. Pull backpack to stomach, squeezing shoulder blades.' },
+                    { name: 'Plank', sets: 2, reps: '20–30 sec', cues: 'Forearms on floor, glutes tight, core braced. Avoid letting hips sag.' }
+                ]
+            },
+            {
+                id: 'tue',
+                day: 'Tuesday',
+                shortDay: 'TUE',
+                icon: '🦵',
+                type: 'Legs + Core',
+                badge: 'Lower Body & Core',
+                description: 'Target quad, glute, and core endurance with controlled eccentric movements.',
+                exercises: [
+                    { name: 'Bodyweight Squats', sets: 3, reps: '10 reps', cues: 'Controlled 2-second descent, drive up smoothly.' },
+                    { name: 'Reverse Lunges', sets: 2, reps: '8 each leg', cues: 'Step backward, drop back knee close to floor, keep front knee stable.' },
+                    { name: 'Glute Bridges', sets: 3, reps: '12 reps', cues: 'Focus on full hip extension without arching low back.' },
+                    { name: 'Calf Raises', sets: 2, reps: '15 reps', cues: 'Pause for 1 sec at peak stretch and peak height.' },
+                    { name: 'Plank', sets: 2, reps: '20–30 sec', cues: 'Maintain steady breathing while keeping abdomen tight.' }
+                ]
+            },
+            {
+                id: 'wed',
+                day: 'Wednesday',
+                shortDay: 'WED',
+                icon: '🏃',
+                type: 'Active Recovery',
+                badge: 'Cardio & Mobility',
+                description: 'Promote circulation and flexibility with low-intensity aerobic activity.',
+                exercises: [
+                    { name: 'Brisk Walking or Cycling', sets: 1, reps: '20–30 min', cues: 'Keep a conversational pace. Aim for light perspiration.' },
+                    { name: 'Light Stretching & Mobility', sets: 1, reps: '5–10 min', cues: 'Focus on hips, hamstrings, shoulders, and spine.' }
+                ]
+            },
+            {
+                id: 'thu',
+                day: 'Thursday',
+                shortDay: 'THU',
+                icon: '💪',
+                type: 'Upper Body',
+                badge: 'Push & Pull',
+                description: 'Strengthen chest, shoulders, upper back, and core.',
+                exercises: [
+                    { name: 'Push-Ups or Incline Push-Ups', sets: 3, reps: '8–12 reps', cues: 'Keep elbows tucked at a 45-degree angle to your torso.' },
+                    { name: 'Backpack Rows', sets: 3, reps: '10 reps', cues: 'Add a little weight to the backpack if the previous set was easy.' },
+                    { name: 'Pike Push-Ups', sets: 2, reps: '6–10 reps', cues: 'Hinge hips high (V-shape), lower top of head forward down toward hands.' },
+                    { name: 'Plank', sets: 2, reps: '20–30 sec', cues: 'Focus on pushing elbows into floor to protract shoulders.' }
+                ]
+            },
+            {
+                id: 'fri',
+                day: 'Friday',
+                shortDay: 'FRI',
+                icon: '🦵',
+                type: 'Legs + Core (RIR Focus)',
+                badge: 'Legs & Core',
+                description: 'Repeat Tuesday structure, stopping 2–3 reps before muscle failure (Reps in Reserve).',
+                exercises: [
+                    { name: 'Bodyweight Squats (2-3 RIR)', sets: 3, reps: '10 reps', cues: 'Stop set when you still have 2-3 clean reps left in you.' },
+                    { name: 'Reverse Lunges (2-3 RIR)', sets: 2, reps: '8 each leg', cues: 'Maintain smooth tempo and control.' },
+                    { name: 'Glute Bridges (2-3 RIR)', sets: 3, reps: '12 reps', cues: 'Squeeze glutes at top.' },
+                    { name: 'Calf Raises (2-3 RIR)', sets: 2, reps: '15 reps', cues: 'Full range of motion.' },
+                    { name: 'Plank', sets: 2, reps: '20–30 sec', cues: 'Strong brace throughout.' }
+                ]
+            },
+            {
+                id: 'sat',
+                day: 'Saturday',
+                shortDay: 'SAT',
+                icon: '🏋️',
+                type: 'Full Body (Moderate)',
+                badge: 'Easy/Moderate Tempo',
+                description: 'Full body movement pattern practice at a relaxed, sustainable intensity.',
+                exercises: [
+                    { name: 'Bodyweight Squats', sets: 2, reps: '10 reps', cues: 'Smooth movement, relaxed effort.' },
+                    { name: 'Incline / Knee Push-Ups', sets: 2, reps: '8–12 reps', cues: 'Maintain clean alignment.' },
+                    { name: 'Glute Bridges', sets: 2, reps: '12 reps', cues: 'Focus on quality contraction.' },
+                    { name: 'Backpack Rows (Light)', sets: 2, reps: '10 reps', cues: 'Controlled pull.' },
+                    { name: 'Plank', sets: 2, reps: '20–30 sec', cues: 'Steady breathing.' }
+                ]
+            },
+            {
+                id: 'sun',
+                day: 'Sunday',
+                shortDay: 'SUN',
+                icon: '😴',
+                type: 'Rest Day',
+                badge: 'Complete Recovery',
+                description: 'Rest, hydrate, and prepare for the upcoming week.',
+                exercises: []
+            }
+        ];
+
+        // State Management
+        let currentDayIndex = 0;
+        let userProgress = {}; // Key format: `${dayId}_${exIdx}_${setIdx}` = boolean
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProgress();
+            
+            // Set current day tab based on actual day of week (0 = Sun, 1 = Mon...)
+            const today = new Date().getDay();
+            currentDayIndex = today === 0 ? 6 : today - 1; // Align Mon=0, Sun=6
+            
+            renderTabs();
+            renderCurrentDay();
+            updateOverallProgress();
+        });
+
+        // Load / Save LocalStorage
+        function loadProgress() {
+            const saved = localStorage.getItem('workout_tracker_progress');
+            if (saved) {
+                try {
+                    userProgress = JSON.parse(saved);
+                } catch (e) {
+                    userProgress = {};
+                }
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('workout_tracker_progress', JSON.stringify(userProgress));
+            updateOverallProgress();
+            renderTabs();
+        }
+
+        function resetWeeklyProgress() {
+            if (confirm("Are you sure you want to reset all logged progress for this week?")) {
+                userProgress = {};
+                saveProgress();
+                renderCurrentDay();
+            }
+        }
+
+        // Render Tabs
+        function renderTabs() {
+            const container = document.getElementById('day-tabs');
+            container.innerHTML = '';
+
+            workoutData.forEach((item, index) => {
+                const isActive = index === currentDayIndex;
+                const isDayComplete = isWholeDayCompleted(index);
+
+                const btn = document.createElement('button');
+                btn.onclick = () => {
+                    currentDayIndex = index;
+                    renderTabs();
+                    renderCurrentDay();
+                };
+
+                btn.className = `w-full flex items-center justify-between p-3 rounded-xl text-left transition font-medium text-xs sm:text-sm ${
+                    isActive 
+                        ? 'bg-brand-500/10 border border-brand-500/30 text-white' 
+                        : 'hover:bg-slate-800 text-slate-400 border border-transparent'
+                }`;
+
+                btn.innerHTML = `
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-base">${item.icon}</span>
+                        <div>
+                            <div class="font-semibold ${isActive ? 'text-brand-400' : 'text-slate-200'}">${item.day}</div>
+                            <div class="text-[11px] text-slate-400 font-normal">${item.type}</div>
+                        </div>
+                    </div>
+                    ${isDayComplete ? '<i class="fa-solid fa-circle-check text-brand-500 text-sm"></i>' : ''}
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        // Check if all sets for a day are marked done
+        function isWholeDayCompleted(dayIdx) {
+            const day = workoutData[dayIdx];
+            if (day.exercises.length === 0) return false;
+
+            let totalSets = 0;
+            let completedSets = 0;
+
+            day.exercises.forEach((ex, exIdx) => {
+                for (let s = 0; s < ex.sets; s++) {
+                    totalSets++;
+                    if (userProgress[`${day.id}_${exIdx}_${s}`]) {
+                        completedSets++;
+                    }
+                }
+            });
+
+            return totalSets > 0 && totalSets === completedSets;
+        }
+
+        // Render Active Day Details
+        function renderCurrentDay() {
+            const day = workoutData[currentDayIndex];
+
+            // Header Elements
+            document.getElementById('day-title').innerText = `${day.icon} ${day.day} — ${day.type}`;
+            document.getElementById('day-badge').innerText = day.badge;
+            document.getElementById('day-focus-tag').innerText = `Day ${currentDayIndex + 1} of 7`;
+            document.getElementById('day-description').innerText = day.description;
+
+            const exercisesList = document.getElementById('exercises-list');
+            const restContainer = document.getElementById('rest-day-container');
+            const markCompleteBtn = document.getElementById('mark-day-complete-btn');
+
+            exercisesList.innerHTML = '';
+
+            if (day.exercises.length === 0) {
+                // Rest Day
+                exercisesList.classList.add('hidden');
+                restContainer.classList.remove('hidden');
+                markCompleteBtn.classList.add('hidden');
+                return;
+            }
+
+            exercisesList.classList.remove('hidden');
+            restContainer.classList.add('hidden');
+            markCompleteBtn.classList.remove('hidden');
+
+            const isDayDone = isWholeDayCompleted(currentDayIndex);
+            markCompleteBtn.innerHTML = isDayDone 
+                ? '<i class="fa-solid fa-rotate-left"></i><span>Unmark Day</span>'
+                : '<i class="fa-solid fa-check"></i><span>Complete All Sets</span>';
+
+            // Populate Exercises
+            day.exercises.forEach((ex, exIdx) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4';
+
+                let setsRowsHTML = '';
+                for (let s = 0; s < ex.sets; s++) {
+                    const key = `${day.id}_${exIdx}_${s}`;
+                    const isChecked = !!userProgress[key];
+                    const noteKey = `${day.id}_${exIdx}_${s}_note`;
+                    const savedNote = localStorage.getItem(noteKey) || '';
+
+                    setsRowsHTML += `
+                        <div class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs font-semibold text-slate-400 w-12">Set ${s + 1}</span>
+                                <span class="text-xs font-medium text-slate-300 bg-slate-800 px-2.5 py-1 rounded-lg">${ex.reps}</span>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <input 
+                                    type="text" 
+                                    placeholder="Weight/Secs (e.g., 5kg)" 
+                                    value="${savedNote}" 
+                                    onchange="saveSetNote('${noteKey}', this.value)"
+                                    class="w-32 sm:w-40 bg-slate-900 border border-slate-700/60 rounded-lg px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                                />
+                                <button 
+                                    onclick="toggleSet('${key}')"
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center transition ${
+                                        isChecked 
+                                            ? 'bg-brand-500 text-white' 
+                                            : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+                                    }">
+                                    <i class="fa-solid ${isChecked ? 'fa-check' : 'fa-minus'} text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <h3 class="font-bold text-white text-base">${ex.name}</h3>
+                            <p class="text-xs text-brand-400 mt-0.5"><i class="fa-solid fa-bullseye text-[10px] mr-1"></i> Target: ${ex.sets} sets × ${ex.reps}</p>
+                        </div>
+                        <button onclick="openTimerModal()" class="text-xs text-slate-400 hover:text-brand-400 bg-slate-800 px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-stopwatch"></i> Rest Timer
+                        </button>
+                    </div>
+
+                    <div class="p-3 bg-slate-950/40 rounded-xl border border-slate-800/50 text-xs text-slate-400 space-y-1">
+                        <span class="font-semibold text-slate-300 block"><i class="fa-solid fa-circle-info text-brand-500 mr-1"></i> Technique Form Cue:</span>
+                        <p>${ex.cues}</p>
+                    </div>
+
+                    <div class="space-y-2 pt-1">
+                        ${setsRowsHTML}
+                    </div>
+                `;
+
+                exercisesList.appendChild(card);
+            });
+        }
+
+        // Toggle Single Set Checkbox
+        function toggleSet(key) {
+            userProgress[key] = !userProgress[key];
+            saveProgress();
+            renderCurrentDay();
+        }
+
+        // Save Custom Note/Weight per set
+        function saveSetNote(noteKey, val) {
+            localStorage.setItem(noteKey, val);
+        }
+
+        // Toggle Whole Day Completion
+        function toggleCurrentDayCompletion() {
+            const day = workoutData[currentDayIndex];
+            const currentState = isWholeDayCompleted(currentDayIndex);
+
+            day.exercises.forEach((ex, exIdx) => {
+                for (let s = 0; s < ex.sets; s++) {
+                    const key = `${day.id}_${exIdx}_${s}`;
+                    userProgress[key] = !currentState;
+                }
+            });
+
+            saveProgress();
+            renderCurrentDay();
+        }
+
+        // Overall Weekly Progress Calculation
+        function updateOverallProgress() {
+            let totalPossibleSets = 0;
+            let totalCompletedSets = 0;
+
+            workoutData.forEach(day => {
+                day.exercises.forEach((ex, exIdx) => {
+                    for (let s = 0; s < ex.sets; s++) {
+                        totalPossibleSets++;
+                        if (userProgress[`${day.id}_${exIdx}_${s}`]) {
+                            totalCompletedSets++;
+                        }
+                    }
+                });
+            });
+
+            const percent = totalPossibleSets > 0 ? Math.round((totalCompletedSets / totalPossibleSets) * 100) : 0;
+            
+            document.getElementById('weekly-percentage').innerText = `${percent}%`;
+            document.getElementById('weekly-progress-bar').style.width = `${percent}%`;
+            document.getElementById('completed-sets-count').innerText = `${totalCompletedSets} / ${totalPossibleSets}`;
+        }
+
+        // Timer Logic
+        let timerInterval = null;
+        let timerSeconds = 30;
+        let initialSeconds = 30;
+        let isTimerRunning = false;
+
+        function openTimerModal() {
+            document.getElementById('timer-modal').classList.remove('hidden');
+        }
+
+        function closeTimerModal() {
+            document.getElementById('timer-modal').classList.add('hidden');
+            pauseTimer();
+        }
+
+        function setTimerDuration(sec) {
+            pauseTimer();
+            timerSeconds = sec;
+            initialSeconds = sec;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (timerSeconds <= 0) timerSeconds = initialSeconds;
+            isTimerRunning = true;
+            document.getElementById('timer-start-btn').innerText = 'Pause Timer';
+            document.getElementById('timer-start-btn').className = 'flex-1 py-3 bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold rounded-xl transition';
+            document.getElementById('timer-status').innerText = 'Counting down...';
+
+            timerInterval = setInterval(() => {
+                timerSeconds--;
+                updateTimerDisplay();
+
+                if (timerSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    isTimerRunning = false;
+                    playBeep();
+                    document.getElementById('timer-status').innerText = 'Time is up! Rest completed.';
+                    document.getElementById('timer-start-btn').innerText = 'Start Timer';
+                    document.getElementById('timer-start-btn').className = 'flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition';
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            document.getElementById('timer-start-btn').innerText = 'Start Timer';
+            document.getElementById('timer-start-btn').className = 'flex-1 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold rounded-xl transition';
+            document.getElementById('timer-status').innerText = 'Paused';
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            timerSeconds = initialSeconds;
+            updateTimerDisplay();
+            document.getElementById('timer-status').innerText = 'Ready';
+        }
+
+        // Web Audio API Beep Tone
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.4);
+            } catch (e) {
+                console.log('Audio API not allowed without user interaction');
+            }
+        }
+    </script>
+</body>
+</html>
