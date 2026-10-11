@@ -1,0 +1,13 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Weekly Workout Tracker",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Workout Tracker",
+  "start_url": "/",
+  "theme_color": "#ffffff",
+  "id": "weekly-workout-tracker",
+  "description": "Track your weekly workouts, complete daily exercises, monitor your progress, and use the built-in workout timer."
+}
